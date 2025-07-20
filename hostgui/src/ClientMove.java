@@ -1,8 +1,6 @@
 import java.io.Serializable;
 
-public class ClientMove implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class ClientMove {
     private final Card card;
     private final int wallIndex;
 

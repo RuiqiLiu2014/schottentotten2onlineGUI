@@ -1,12 +1,8 @@
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
-public class GameState implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class GameState {
     private Set<Card> hostHand;
     private Set<Card> clientHand;
     private Wall[] walls;
@@ -16,8 +12,9 @@ public class GameState implements Serializable {
     private int cauldronCount;
     private boolean usedCauldron;
     private boolean isClientAttacker;
+    private Winner winner;
 
-    public GameState(Set<Card> hostHand, Set<Card> clientHand, Wall[] walls, int deckSize, Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount, boolean usedCauldron, boolean isClientAttacker) {
+    public GameState(Set<Card> hostHand, Set<Card> clientHand, Wall[] walls, int deckSize, Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount, boolean usedCauldron, boolean isClientAttacker, Winner winner) {
         this.hostHand = hostHand;
         this.clientHand = clientHand;
         this.walls = walls;
@@ -27,6 +24,7 @@ public class GameState implements Serializable {
         this.cauldronCount = cauldronCount;
         this.usedCauldron = usedCauldron;
         this.isClientAttacker = isClientAttacker;
+        this.winner = winner;
     }
 
     public Set<Card> getHostHand() {
@@ -63,5 +61,9 @@ public class GameState implements Serializable {
 
     public boolean isClientAttacker() {
         return isClientAttacker;
+    }
+
+    public Winner getWinner() {
+        return winner;
     }
 }

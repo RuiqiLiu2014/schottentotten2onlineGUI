@@ -2,11 +2,11 @@ import javax.swing.*;
 import java.net.*;
 import java.io.*;
 import java.util.Scanner;
+import com.google.gson.Gson;
 
 public class ClientGUI {
     private static Socket socket;
-    private static ObjectOutputStream out;
-    private static ObjectInputStream in;
+    private static Gson gson = new Gson();
     private static JFrame mainFrame;
     private static GameState state;
     private static GameView gameView;
@@ -16,12 +16,10 @@ public class ClientGUI {
         System.out.print("Enter host IP: ");
         String hostIP = scan.nextLine().trim();
         socket = new Socket(hostIP, 12345);
-        out = new ObjectOutputStream(socket.getOutputStream());
-        in = new ObjectInputStream(socket.getInputStream());
 
-        listenForGameState();
         mainFrame = new JFrame("Schotten Totten 2 (client)");
         mainFrame.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.add(new JLabel("Host is choosing role"));
         mainFrame.setVisible(true);
         listenForGameState();
@@ -29,18 +27,29 @@ public class ClientGUI {
 
     private static void listenForGameState() {
         new Thread(() -> {
-            try {
-                while (true) {
-                    Object obj = in.readObject();
-                    if (obj instanceof GameState) {
-                        state = (GameState) obj;
-                        gameView = new GameView(state, ClientGUI::onWallClicked);
-                        updateUI();
-                    } else if (obj instanceof GameOverMessage) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mainFrame, ((GameOverMessage) obj).getWinner() + " " + "wins!", "Game Over", JOptionPane.INFORMATION_MESSAGE));
+            try (
+                    InputStream input = socket.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+            ) {
+                String json;
+                while ((json = reader.readLine()) != null) {
+                    // Deserialize received JSON into GameState
+                    state = gson.fromJson(json, GameState.class);
+
+                    // Build new game view and update UI
+                    gameView = new GameView(state, ClientGUI::onWallClicked);
+                    updateUI();
+
+                    // Show game over message if needed
+                    if (state.getWinner() != Winner.NONE) {
+                        SwingUtilities.invokeLater(() ->
+                                JOptionPane.showMessageDialog(mainFrame,
+                                        state.getWinner() == Winner.ATTACKER ? "Attacker wins!" : "Defender wins!",
+                                        "Game Over", JOptionPane.INFORMATION_MESSAGE));
+                        break;
                     }
                 }
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }).start();
@@ -53,22 +62,18 @@ public class ClientGUI {
         mainFrame.repaint();
     }
 
-    public static void stop() throws IOException {
-        in.close();
-        out.close();
-        socket.close();
-    }
-
     public static void onWallClicked(Wall wall) {
         Card card = gameView.getSelectedCard();
         if (card != null) {
             if (state.isClientTurn()) {
                 ClientMove move = new ClientMove(card, wall.getWallIndex());
                 gameView.unselectCard();
+
+                // Send the move to the host over the socket as JSON
                 try {
-                    System.out.println(move);
-                    out.writeObject(move);
-                    out.flush();
+                    PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                    String jsonMove = gson.toJson(move);
+                    out.println(jsonMove);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

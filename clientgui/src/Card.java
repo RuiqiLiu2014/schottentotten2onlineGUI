@@ -1,9 +1,7 @@
 import java.io.Serializable;
 import java.util.Objects;
 
-public class Card implements Comparable<Card>, Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class Card implements Comparable<Card> {
     private final int value;
     private final CardColor cardColor;
 

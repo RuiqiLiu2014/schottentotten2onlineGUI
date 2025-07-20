@@ -22,16 +22,14 @@ public class HostGUI {
         clientSocket = serverSocket.accept();
         System.out.println("Client connected!");
 
-        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-
         hostRole = chooseHostRole(true);
-        gameController = new GameController(new Game(new Attacker(hostRole == Role.ATTACKER ? PlayerType.HOST : PlayerType.CLIENT), new Defender(hostRole == Role.ATTACKER ? PlayerType.CLIENT : PlayerType.HOST), new Board(), new Deck(), new Discard()), hostRole, out, in);
+        gameController = new GameController(new Game(new Attacker(hostRole == Role.ATTACKER ? PlayerType.HOST : PlayerType.CLIENT), new Defender(hostRole == Role.ATTACKER ? PlayerType.CLIENT : PlayerType.HOST), new Board(), new Deck(), new Discard()), hostRole, clientSocket);
 
         mainFrame = new JFrame("Schotten Totten 2 (host)");
         mainFrame.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         gameController.setup();
-        gameController.displayGameState();
+        gameController.displayGameState(false);
         gameController.runGame();
         mainFrame.setVisible(true);
     }

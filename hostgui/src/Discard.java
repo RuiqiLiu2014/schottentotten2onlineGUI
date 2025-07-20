@@ -1,9 +1,7 @@
 import java.io.Serializable;
 import java.util.*;
 
-public class Discard implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class Discard {
     private final Set<Card> discard;
 
     public Discard() {

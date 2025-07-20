@@ -11,7 +11,6 @@ public class GameView extends JPanel {
     public GameView(GameState gameState, Consumer<Wall> onWallClicked) {
         this.gameState = gameState;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(Color.BLACK);
         hostHandView = new HandView(gameState.getHostHand(), !gameState.isClientAttacker(), gameState.getCauldronCount(), gameState.hasUsedCauldron(), false);
         clientHandView = new HandView(gameState.getClientHand(), gameState.isClientAttacker(), gameState.getCauldronCount(), gameState.hasUsedCauldron(), true);
         tableView = new TableView(gameState.getWalls(), gameState.getDeckSize(), gameState.getDiscard(), onWallClicked, !gameState.isClientAttacker());

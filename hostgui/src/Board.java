@@ -3,9 +3,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class Board implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class Board {
     private final Wall[] walls;
 
     public Board() {

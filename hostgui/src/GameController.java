@@ -1,15 +1,17 @@
 import javax.swing.*;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.List;
+import com.google.gson.Gson;
+import java.net.*;
 
 public class GameController {
     private final Game game;
     private GameView gameView;
     private final Role hostRole;
-    private final ObjectOutputStream out;
-    private final ObjectInputStream in;
+    private static final Gson gson = new Gson();
+    private final Socket clientSocket;
+    private PrintWriter out;
+    private BufferedReader in;
 
     private Thread listenerThread = null;
 
@@ -21,12 +23,13 @@ public class GameController {
         GAME_OVER
     }
 
-    public GameController(Game game, Role hostRole, ObjectOutputStream out, ObjectInputStream in) {
+    public GameController(Game game, Role hostRole, Socket clientSocket) throws IOException {
         this.game = game;
-        this.gameView = new GameView(createGameState(), this::onWallClicked);
+        this.gameView = new GameView(createGameState(false), this::onWallClicked);
         this.hostRole = hostRole;
-        this.out = out;
-        this.in = in;
+        this.clientSocket = clientSocket;
+        this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
 
     public void setup(){
@@ -35,7 +38,7 @@ public class GameController {
 
     public void runGame() throws IOException {
         currentPhase = hostRole == Role.ATTACKER ? Phase.HOST_TURN : Phase.CLIENT_TURN;
-        displayGameState();
+        displayGameState(false);
         if (currentPhase == Phase.CLIENT_TURN) {
             waitForClientMove();
         }
@@ -55,15 +58,16 @@ public class GameController {
 
         listenerThread = new Thread(() -> {
             try {
-                while (currentPhase == Phase.CLIENT_TURN) {  // Keep checking if it's the client's turn
-                    Object obj = in.readObject();
-                    if (obj instanceof ClientMove move) {
+                while (currentPhase == Phase.CLIENT_TURN) {
+                    String json = in.readLine();  // read JSON from client
+                    if (json == null) continue;
+                    ClientMove move = gson.fromJson(json, ClientMove.class);
+                    if (move != null) {
                         processMove(move);
-                    } else {
-                        System.err.println("Unexpected object: " + obj.getClass());
+
                     }
                 }
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException e) {
                 if (!Thread.currentThread().isInterrupted()) {
                     e.printStackTrace();
                 }
@@ -84,16 +88,9 @@ public class GameController {
                 getClient().getHand().remove(card);
                 getClient().draw(game.getDeck());
                 game.declareControl();
-                displayGameState();
-                Winner winner = game.getWinner(hostRole == Role.DEFENDER);
-                if (winner != Winner.NONE) {
-                    currentPhase = Phase.GAME_OVER;
-                    SwingUtilities.invokeLater(() -> gameView.displayWinner(winner));
-                    out.writeObject(new GameOverMessage(winner == Winner.ATTACKER ? "Attacker" : "Defender"));
-                    return;
-                }
-                currentPhase = Phase.HOST_TURN;
                 getClient().setUseCauldron(false);
+                currentPhase = Phase.HOST_TURN;
+                displayGameState(hostRole == Role.DEFENDER);
             } else if (result.getResultType() == PlayResult.Type.ACTION) {
                 List<Card> toDiscard = result.getToDiscard();
                 if (!toDiscard.isEmpty()) {
@@ -101,9 +98,9 @@ public class GameController {
                     if (hostRole == Role.ATTACKER) {
                         game.getDefender().setUseCauldron(true);
                     }
+                    displayGameState(false);
                 }
             }
-            displayGameState();
         }
     }
 
@@ -115,7 +112,7 @@ public class GameController {
         return hostRole == Role.ATTACKER ? game.getAttacker() : game.getDefender();
     }
 
-    private GameState createGameState() {
+    private GameState createGameState(boolean checkDeck) {
         return new GameState(getHost().getHand().getCards(),
                 getClient().getHand().getCards(),
                 game.getBoard().getWalls(),
@@ -124,16 +121,24 @@ public class GameController {
                 currentPhase == Phase.CLIENT_TURN,
                 game.getDefender().getCauldronCount(),
                 game.getDefender().hasUsedCauldron(),
-                hostRole == Role.DEFENDER);
+                hostRole == Role.DEFENDER,
+                game.getWinner(checkDeck));
     }
 
-    public void displayGameState() throws IOException {
-        GameState state = createGameState();
+    public boolean displayGameState(boolean checkDeck) throws IOException {
+        GameState state = createGameState(checkDeck);
         gameView = new GameView(state, this::onWallClicked);
         HostGUI.displayGameState();
-        out.reset();
-        out.writeObject(state);
-        out.flush();
+        String json = gson.toJson(state);
+        out.println(json);  // send over network
+
+        if (state.getWinner() != Winner.NONE) {
+            currentPhase = Phase.GAME_OVER;
+            SwingUtilities.invokeLater(() -> gameView.displayWinner(state.getWinner()));
+            return true;
+        }
+
+        return false;
     }
 
     public void onWallClicked(Wall wall) {
@@ -147,30 +152,15 @@ public class GameController {
                     gameView.unselectCard();
                     getHost().draw(game.getDeck());
                     game.declareControl();
-                    try {
-                        displayGameState();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    Winner winner = game.getWinner(hostRole == Role.ATTACKER);
-                    if (winner != Winner.NONE) {
-                        currentPhase = Phase.GAME_OVER;
-                        SwingUtilities.invokeLater(() -> gameView.displayWinner(winner));
-                        try {
-                            out.writeObject(new GameOverMessage(winner == Winner.ATTACKER ? "Attacker" : "Defender"));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        return;
-                    }
-                    currentPhase = Phase.CLIENT_TURN;
                     getHost().setUseCauldron(false);
+                    currentPhase = Phase.CLIENT_TURN;
                     try {
-                        displayGameState();
+                        if (displayGameState(hostRole == Role.ATTACKER)) {
+                            return;
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    waitForClientMove();
                 } else if (result.getResultType() == PlayResult.Type.ACTION) {
                     List<Card> toDiscard = result.getToDiscard();
                     if (!toDiscard.isEmpty()) {
@@ -179,13 +169,13 @@ public class GameController {
                             game.getDefender().setUseCauldron(true);
                         }
                         try {
-                            displayGameState();
+                            displayGameState(false);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        waitForClientMove();
                     }
                 }
+                waitForClientMove();
             }
         } else {
             HostGUI.notYourTurn();
