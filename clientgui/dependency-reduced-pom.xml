@@ -19,6 +19,8 @@
           </execution>
         </executions>
         <configuration>
+          <shadedArtifactAttached>false</shadedArtifactAttached>
+          <outputFile>${project.basedir}/clientgui.jar</outputFile>
           <transformers>
             <transformer>
               <mainClass>ClientGUI</mainClass>
