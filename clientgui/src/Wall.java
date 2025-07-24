@@ -1,33 +1,21 @@
-import java.io.Serializable;
 import java.util.*;
 
 public class Wall {
     private final int wallIndex;
-    private Status status;
-    private int length;
-    private final int intactLength;
-    private final int damagedLength;
-    private WallPattern pattern;
-    private final WallPattern intactPattern;
-    private final WallPattern damagedPattern;
+    private final Status status;
+    private final int length;
+    private final WallPattern pattern;
 
     private final List<Card> attackerCards;
     private final List<Card> defenderCards;
-
-    private boolean attackerFinishedFirst;
-    private static final int MULTIPLIER = 100;
 
     public enum Status {
         BROKEN, DAMAGED, INTACT
     }
 
-    public Wall(int wallIndex, int intactLength, int damagedLength, WallPattern intactPattern, WallPattern damagedPattern) {
+    public Wall(int wallIndex, int intactLength, WallPattern intactPattern) {
         this.wallIndex = wallIndex;
         this.status = Status.INTACT;
-        this.intactLength = intactLength;
-        this.damagedLength = damagedLength;
-        this.intactPattern = intactPattern;
-        this.damagedPattern = damagedPattern;
         this.length = intactLength;
         this.pattern = intactPattern;
 

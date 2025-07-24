@@ -1,20 +1,6 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class Game {
-    private final Player attacker;
-    private final Player defender;
-    private final Board board;
-    private final Deck deck;
-    private final Discard discard;
-
-    public Game(Player attacker, Player defender, Board board, Deck deck, Discard discard) {
-        this.attacker = attacker;
-        this.defender = defender;
-        this.board = board;
-        this.deck = deck;
-        this.discard = discard;
-    }
+public record Game(Player attacker, Player defender, Board board, Deck deck, Discard discard) {
 
     public void setup() {
         deck.reset();
@@ -57,25 +43,5 @@ public class Game {
         }
 
         return Winner.NONE;
-    }
-
-    public Player getAttacker() {
-        return attacker;
-    }
-
-    public Player getDefender() {
-        return defender;
-    }
-
-    public Board getBoard() {
-        return board;
-    }
-
-    public Deck getDeck() {
-        return deck;
-    }
-
-    public Discard getDiscard() {
-        return discard;
     }
 }

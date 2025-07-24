@@ -3,16 +3,16 @@ import java.util.Map;
 import java.util.Set;
 
 public class GameState {
-    private Set<Card> hostHand;
-    private Set<Card> clientHand;
-    private Wall[] walls;
-    private int deckSize;
-    private Map<CardColor, List<Card>> discard;
-    private boolean isClientTurn;
-    private int cauldronCount;
-    private boolean usedCauldron;
-    private boolean isClientAttacker;
-    private Winner winner;
+    private final Set<Card> hostHand;
+    private final Set<Card> clientHand;
+    private final Wall[] walls;
+    private final int deckSize;
+    private final Map<CardColor, List<Card>> discard;
+    private final boolean isClientTurn;
+    private final int cauldronCount;
+    private final boolean usedCauldron;
+    private final boolean isClientAttacker;
+    private final Winner winner;
 
     public GameState(Set<Card> hostHand, Set<Card> clientHand, Wall[] walls, int deckSize, Map<CardColor, List<Card>> discard, boolean isClientTurn, int cauldronCount, boolean usedCauldron, boolean isClientAttacker, Winner winner) {
         this.hostHand = hostHand;

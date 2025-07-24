@@ -1,4 +1,3 @@
-import java.io.Serializable;
 import java.util.*;
 
 public class Wall {
@@ -33,10 +32,6 @@ public class Wall {
 
         this.attackerCards = new ArrayList<>();
         this.defenderCards = new ArrayList<>();
-    }
-
-    public int getWallIndex() {
-        return wallIndex;
     }
 
     public boolean contains(Card card) {

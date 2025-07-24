@@ -6,21 +6,16 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class WallView extends JPanel {
-    private final Wall wall;
-    public static final int OVERALL_HEIGHT = Constants.WINDOW_HEIGHT - 3 * Constants.CARD_HEIGHT;
-    public static final int WALL_WIDTH = Constants.CARD_WIDTH;
-    public static final int WALL_HEIGHT = 50;
 
     public WallView(Wall wall, Consumer<Wall> onWallClicked, boolean hostIsAttacker) {
-        this.wall = wall;
         setLayout(null);
-        setPreferredSize(new Dimension(Constants.CARD_WIDTH, OVERALL_HEIGHT));
+        setPreferredSize(new Dimension(Constants.CARD_WIDTH, Constants.WALL_OVERALL_HEIGHT));
         setOpaque(true);
 
         List<Card> topCards = hostIsAttacker ? wall.getDefenderCards() : wall.getAttackerCards();
         for (int i = topCards.size() - 1; i >= 0; i--) {
             CardView cardView = new CardView(topCards.get(i));
-            cardView.setBounds(0, (OVERALL_HEIGHT - WALL_HEIGHT) / 2 - i * Constants.OVERLAP - Constants.OVERLAP / 2 - Constants.CARD_HEIGHT, Constants.CARD_WIDTH, Constants.CARD_HEIGHT);
+            cardView.setBounds(0, (Constants.WALL_OVERALL_HEIGHT - Constants.WALL_LABEL_HEIGHT) / 2 - i * Constants.OVERLAP - Constants.OVERLAP / 2 - Constants.CARD_HEIGHT, Constants.CARD_WIDTH, Constants.CARD_HEIGHT);
             add(cardView);
         }
 
@@ -33,14 +28,14 @@ public class WallView extends JPanel {
             } else {
                 label.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             }
-            label.setBounds(0, (OVERALL_HEIGHT - WALL_HEIGHT) / 2, WALL_WIDTH, WALL_HEIGHT);
+            label.setBounds(0, (Constants.WALL_OVERALL_HEIGHT - Constants.WALL_LABEL_HEIGHT) / 2, Constants.WALL_WIDTH, Constants.WALL_LABEL_HEIGHT);
             add(label);
         }
 
         List<Card> bottomCards = hostIsAttacker ? wall.getAttackerCards() : wall.getDefenderCards();
         for (int i = bottomCards.size() - 1; i >= 0; i--) {
             CardView cardView = new CardView(bottomCards.get(i));
-            cardView.setBounds(0, (OVERALL_HEIGHT + WALL_HEIGHT) / 2 + i * Constants.OVERLAP + Constants.OVERLAP / 2, Constants.CARD_WIDTH, Constants.CARD_HEIGHT);
+            cardView.setBounds(0, (Constants.WALL_OVERALL_HEIGHT + Constants.WALL_LABEL_HEIGHT) / 2 + i * Constants.OVERLAP + Constants.OVERLAP / 2, Constants.CARD_WIDTH, Constants.CARD_HEIGHT);
             add(cardView);
         }
 

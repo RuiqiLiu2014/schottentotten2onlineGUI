@@ -1,7 +1,4 @@
-import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public class Board {
     private final Wall[] walls;

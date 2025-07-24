@@ -1,19 +1,14 @@
 import javax.swing.*;
-import java.awt.*;
 import java.util.function.Consumer;
 
 public class GameView extends JPanel {
-    private final GameState gameState;
-    private final TableView tableView;
     private final HandView hostHandView;
-    private final HandView clientHandView;
 
     public GameView(GameState gameState, Consumer<Wall> onWallClicked) {
-        this.gameState = gameState;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         hostHandView = new HandView(gameState.getHostHand(), !gameState.isClientAttacker(), gameState.getCauldronCount(), gameState.hasUsedCauldron(), false);
-        clientHandView = new HandView(gameState.getClientHand(), gameState.isClientAttacker(), gameState.getCauldronCount(), gameState.hasUsedCauldron(), true);
-        tableView = new TableView(gameState.getWalls(), gameState.getDeckSize(), gameState.getDiscard(), onWallClicked, !gameState.isClientAttacker());
+        HandView clientHandView = new HandView(gameState.getClientHand(), gameState.isClientAttacker(), gameState.getCauldronCount(), gameState.hasUsedCauldron(), true);
+        TableView tableView = new TableView(gameState.getWalls(), gameState.getDeckSize(), gameState.getDiscard(), onWallClicked, !gameState.isClientAttacker());
 
         add(clientHandView);
         add(Box.createVerticalGlue());

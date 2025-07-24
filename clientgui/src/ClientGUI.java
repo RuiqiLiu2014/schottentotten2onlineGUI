@@ -6,7 +6,7 @@ import com.google.gson.Gson;
 
 public class ClientGUI {
     private static Socket socket;
-    private static Gson gson = new Gson();
+    private static final Gson gson = new Gson();
     private static JFrame mainFrame;
     private static GameState state;
     private static GameView gameView;
@@ -33,14 +33,10 @@ public class ClientGUI {
             ) {
                 String json;
                 while ((json = reader.readLine()) != null) {
-                    // Deserialize received JSON into GameState
                     state = gson.fromJson(json, GameState.class);
-
-                    // Build new game view and update UI
                     gameView = new GameView(state, ClientGUI::onWallClicked);
                     updateUI();
 
-                    // Show game over message if needed
                     if (state.getWinner() != Winner.NONE) {
                         SwingUtilities.invokeLater(() ->
                                 JOptionPane.showMessageDialog(mainFrame,
@@ -68,8 +64,6 @@ public class ClientGUI {
             if (state.isClientTurn()) {
                 ClientMove move = new ClientMove(card, wall.getWallIndex());
                 gameView.unselectCard();
-
-                // Send the move to the host over the socket as JSON
                 try {
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                     String jsonMove = gson.toJson(move);

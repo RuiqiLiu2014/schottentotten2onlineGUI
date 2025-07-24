@@ -1,11 +1,9 @@
-public abstract class Player {
+public class Player {
     protected Hand hand;
     protected boolean usedCauldron;
     protected int cauldronCount = Constants.NUM_CAULDRONS;
-    protected PlayerType playerType;
 
-    public Player(PlayerType playerType) {
-        this.playerType = playerType;
+    public Player() {
         hand = new Hand();
     }
 
@@ -18,10 +16,6 @@ public abstract class Player {
 
     public Hand getHand() {
         return hand;
-    }
-
-    public PlayerType getPlayerType() {
-        return playerType;
     }
 
     public boolean hasUsedCauldron() {
@@ -38,6 +32,4 @@ public abstract class Player {
     public int getCauldronCount() {
         return cauldronCount;
     }
-
-    public abstract boolean isAttacker();
 }

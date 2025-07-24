@@ -1,5 +1,4 @@
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public class Hand {
     private final Set<Card> cards;
@@ -12,15 +11,11 @@ public class Hand {
         return cards;
     }
 
-    public int size() {
-        return cards.size();
-    }
-
     public void add(Card card) {
         cards.add(card);
     }
 
-    public boolean remove(Card card) {
-        return cards.remove(card);
+    public void remove(Card card) {
+        cards.remove(card);
     }
 }

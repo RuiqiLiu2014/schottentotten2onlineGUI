@@ -1,4 +1,3 @@
-import java.io.Serializable;
 import java.util.*;
 
 public class Discard {
@@ -18,10 +17,6 @@ public class Discard {
 
     public boolean contains(Card card) {
         return discard.contains(card);
-    }
-
-    public boolean isEmpty() {
-        return discard.isEmpty();
     }
 
     public void clear() {

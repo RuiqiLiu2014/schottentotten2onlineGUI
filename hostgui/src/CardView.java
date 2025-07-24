@@ -48,7 +48,7 @@ public class CardView extends JPanel {
             g2.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
 
             g2.setColor(card.getColor().getDisplayColor());
-            g2.setFont(new Font("Arial", Font.BOLD, 18));
+            g2.setFont(new Font("Arial", Font.BOLD, Constants.CARD_FONT_SIZE));
             FontMetrics fm = g2.getFontMetrics();
             int padding = 5;
             if (card.equals(Card.RETREAT)) {

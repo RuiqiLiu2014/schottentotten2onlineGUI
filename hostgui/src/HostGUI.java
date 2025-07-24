@@ -1,15 +1,9 @@
 import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.Scanner;
 
 public class HostGUI {
-    private static ServerSocket serverSocket;
-    private static Socket clientSocket;
 
     private static GameController gameController;
     private static JFrame mainFrame;
@@ -17,13 +11,13 @@ public class HostGUI {
     private static Role hostRole;
 
     public static void main(String[] args) throws IOException {
-        serverSocket = new ServerSocket(12345);
+        ServerSocket serverSocket = new ServerSocket(12345);
         System.out.println("Waiting for client...");
-        clientSocket = serverSocket.accept();
+        Socket clientSocket = serverSocket.accept();
         System.out.println("Client connected!");
 
         hostRole = chooseHostRole(true);
-        gameController = new GameController(new Game(new Attacker(hostRole == Role.ATTACKER ? PlayerType.HOST : PlayerType.CLIENT), new Defender(hostRole == Role.ATTACKER ? PlayerType.CLIENT : PlayerType.HOST), new Board(), new Deck(), new Discard()), hostRole, clientSocket);
+        gameController = new GameController(new Game(new Player(), new Player(), new Board(), new Deck(), new Discard()), hostRole, clientSocket);
 
         mainFrame = new JFrame("Schotten Totten 2 (host)");
         mainFrame.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);

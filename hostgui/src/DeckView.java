@@ -7,9 +7,12 @@ public class DeckView extends JPanel {
         JLabel invisLabel = new JLabel("deck", SwingConstants.CENTER);
         invisLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         invisLabel.setForeground(new Color(0, 0, 0, 0));
+        invisLabel.setFont(new Font("Arial", Font.BOLD, Constants.CARD_FONT_SIZE));
 
         JLabel label = new JLabel(deckSize + "", SwingConstants.CENTER);
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setFont(new Font("Arial", Font.BOLD, Constants.CARD_FONT_SIZE));
+
 
         JPanel cardBackView = new CardBackView();
         cardBackView.setAlignmentX(Component.CENTER_ALIGNMENT);

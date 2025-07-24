@@ -9,9 +9,8 @@ public class GameController {
     private GameView gameView;
     private final Role hostRole;
     private static final Gson gson = new Gson();
-    private final Socket clientSocket;
-    private PrintWriter out;
-    private BufferedReader in;
+    private final PrintWriter out;
+    private final BufferedReader in;
 
     private Thread listenerThread = null;
 
@@ -27,7 +26,6 @@ public class GameController {
         this.game = game;
         this.gameView = new GameView(createGameState(false), this::onWallClicked);
         this.hostRole = hostRole;
-        this.clientSocket = clientSocket;
         this.out = new PrintWriter(clientSocket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
@@ -78,15 +76,15 @@ public class GameController {
     }
 
     private void processMove(ClientMove move) throws IOException {
-        Card card = move.getCard();
-        Wall wall = game.getBoard().getWalls()[move.getWallIndex()];
+        Card card = move.card();
+        Wall wall = game.board().getWalls()[move.wallIndex()];
 
         if (currentPhase == Phase.CLIENT_TURN) {
             PlayResult result = wall.playCard(card, hostRole == Role.DEFENDER);
             if (result.getResultType() == PlayResult.Type.SUCCESS) {
-                game.getDiscard().addAll(result.getToDiscard());
+                game.discard().addAll(result.getToDiscard());
                 getClient().getHand().remove(card);
-                getClient().draw(game.getDeck());
+                getClient().draw(game.deck());
                 game.declareControl();
                 getClient().setUseCauldron(false);
                 currentPhase = Phase.HOST_TURN;
@@ -94,9 +92,9 @@ public class GameController {
             } else if (result.getResultType() == PlayResult.Type.ACTION) {
                 List<Card> toDiscard = result.getToDiscard();
                 if (!toDiscard.isEmpty()) {
-                    game.getDiscard().addAll(toDiscard);
+                    game.discard().addAll(toDiscard);
                     if (hostRole == Role.ATTACKER) {
-                        game.getDefender().setUseCauldron(true);
+                        game.defender().setUseCauldron(true);
                     }
                     displayGameState(false);
                 }
@@ -105,22 +103,22 @@ public class GameController {
     }
 
     private Player getClient() {
-        return hostRole == Role.DEFENDER ? game.getAttacker() : game.getDefender();
+        return hostRole == Role.DEFENDER ? game.attacker() : game.defender();
     }
 
     private Player getHost() {
-        return hostRole == Role.ATTACKER ? game.getAttacker() : game.getDefender();
+        return hostRole == Role.ATTACKER ? game.attacker() : game.defender();
     }
 
     private GameState createGameState(boolean checkDeck) {
         return new GameState(getHost().getHand().getCards(),
                 getClient().getHand().getCards(),
-                game.getBoard().getWalls(),
-                game.getDeck().size(),
-                game.getDiscard().getCardsByColor(),
+                game.board().getWalls(),
+                game.deck().size(),
+                game.discard().getCardsByColor(),
                 currentPhase == Phase.CLIENT_TURN,
-                game.getDefender().getCauldronCount(),
-                game.getDefender().hasUsedCauldron(),
+                game.defender().getCauldronCount(),
+                game.defender().hasUsedCauldron(),
                 hostRole == Role.DEFENDER,
                 game.getWinner(checkDeck));
     }
@@ -130,7 +128,7 @@ public class GameController {
         gameView = new GameView(state, this::onWallClicked);
         HostGUI.displayGameState();
         String json = gson.toJson(state);
-        out.println(json);  // send over network
+        out.println(json);
 
         if (state.getWinner() != Winner.NONE) {
             currentPhase = Phase.GAME_OVER;
@@ -147,10 +145,10 @@ public class GameController {
             if (card != null) {
                 PlayResult result = wall.playCard(card, hostRole == Role.ATTACKER);
                 if (result.getResultType() == PlayResult.Type.SUCCESS) {
-                    game.getDiscard().addAll(result.getToDiscard());
+                    game.discard().addAll(result.getToDiscard());
                     getHost().getHand().remove(card);
                     gameView.unselectCard();
-                    getHost().draw(game.getDeck());
+                    getHost().draw(game.deck());
                     game.declareControl();
                     getHost().setUseCauldron(false);
                     currentPhase = Phase.CLIENT_TURN;
@@ -164,9 +162,9 @@ public class GameController {
                 } else if (result.getResultType() == PlayResult.Type.ACTION) {
                     List<Card> toDiscard = result.getToDiscard();
                     if (!toDiscard.isEmpty()) {
-                        game.getDiscard().addAll(toDiscard);
+                        game.discard().addAll(toDiscard);
                         if (hostRole == Role.DEFENDER) {
-                            game.getDefender().setUseCauldron(true);
+                            game.defender().setUseCauldron(true);
                         }
                         try {
                             displayGameState(false);

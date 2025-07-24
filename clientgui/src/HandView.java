@@ -3,11 +3,9 @@ import java.awt.*;
 import java.util.Set;
 
 public class HandView extends JPanel {
-    private final Set<Card> cards;
     private CardContainer selectedCard = null;
 
     public HandView(Set<Card> cards, boolean isAttacker, int cauldronCount, boolean hasUsedCauldron, boolean isOpponent) {
-        this.cards = cards;
         setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
         setMaximumSize(new Dimension(Constants.WINDOW_WIDTH, Constants.CARD_HEIGHT));
         if (isOpponent) {
