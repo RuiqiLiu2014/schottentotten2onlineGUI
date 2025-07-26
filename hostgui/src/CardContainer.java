@@ -4,16 +4,15 @@ import java.awt.*;
 public class CardContainer extends JPanel {
     private final CardView cardView;
     private boolean popped;
-    private static final int POP_OFFSET = 15;
     private final HandView parent;
 
     public CardContainer(Card card, HandView parent) {
         this.parent = parent;
         setLayout(null);
-        setPreferredSize(new Dimension(Constants.CARD_WIDTH, Constants.CARD_HEIGHT + POP_OFFSET));
+        setPreferredSize(new Dimension(Constants.CARD_WIDTH, Constants.CARD_HEIGHT + Constants.POP_OFFSET));
         setOpaque(false);
         this.cardView = new CardView(card, this::mouseClicked);
-        cardView.setBounds(0, POP_OFFSET, Constants.CARD_WIDTH, Constants.CARD_HEIGHT);
+        cardView.setBounds(0, Constants.POP_OFFSET, Constants.CARD_WIDTH, Constants.CARD_HEIGHT);
         add(cardView);
         popped = false;
     }
@@ -31,7 +30,7 @@ public class CardContainer extends JPanel {
     }
 
     public void updatePosition() {
-        cardView.setLocation(0, popped ? 0 : POP_OFFSET);
+        cardView.setLocation(0, popped ? 0 : Constants.POP_OFFSET);
     }
 
     public Card getCard() {

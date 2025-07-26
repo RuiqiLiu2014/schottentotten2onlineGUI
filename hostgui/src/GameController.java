@@ -11,6 +11,7 @@ public class GameController {
     private static final Gson gson = new Gson();
     private final PrintWriter out;
     private final BufferedReader in;
+    private boolean switchSides;
 
     private Thread listenerThread = null;
 
@@ -28,6 +29,7 @@ public class GameController {
         this.hostRole = hostRole;
         this.out = new PrintWriter(clientSocket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        switchSides = false;
     }
 
     public void setup(){
@@ -131,11 +133,28 @@ public class GameController {
         out.println(json);
 
         if (state.getWinner() != Winner.NONE) {
+            Object[] options = {"Yes", "No", "Quit"};
+            int result = JOptionPane.showOptionDialog(
+                    null,
+                    (state.getWinner() == Winner.ATTACKER ? "Attacker" : "Defender") + " wins!\nSwitch sides?",
+                    "Game Over",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    options,
+                    options[0]
+            );
+
+            if (result == 0) {
+                switchSides = true;
+            } else if (result == 1) {
+                switchSides = false;
+            } else {
+                System.exit(0);
+            }
             currentPhase = Phase.GAME_OVER;
-            SwingUtilities.invokeLater(() -> gameView.displayWinner(state.getWinner()));
             return true;
         }
-
         return false;
     }
 
@@ -175,12 +194,22 @@ public class GameController {
                 }
                 waitForClientMove();
             }
-        } else {
-            HostGUI.notYourTurn();
         }
     }
 
     public GameView getGameView() {
         return gameView;
+    }
+
+    public void updateGameView() {
+        gameView.updateLayout(this::onWallClicked);
+    }
+
+    public boolean switchSides() {
+        return switchSides;
+    }
+
+    public boolean gameOver() {
+        return currentPhase == Phase.GAME_OVER;
     }
 }

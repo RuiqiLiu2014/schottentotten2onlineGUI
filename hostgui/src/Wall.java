@@ -76,6 +76,7 @@ public class Wall {
         if (card.equals(Card.CAULDRON)) {
             if (!attackerCards.isEmpty()) {
                 List<Card> toDiscard = List.of(attackerCards.removeLast());
+                attackerFinishedFirst = false;
                 return new PlayResult(PlayResult.Type.ACTION, toDiscard);
             }
             return new PlayResult(PlayResult.Type.FAILURE);
@@ -107,7 +108,10 @@ public class Wall {
                 toDiscard.add(temp);
             }
         }
-        attackerFinishedFirst = attackerCards.size() == length && defenderCards.size() < length;
+
+        if (isAttacker) {
+            attackerFinishedFirst = attackerCards.size() == length && defenderCards.size() < length;
+        }
         return new PlayResult(PlayResult.Type.SUCCESS, toDiscard);
     }
 

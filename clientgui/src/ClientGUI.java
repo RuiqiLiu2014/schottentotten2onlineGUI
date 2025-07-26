@@ -1,6 +1,9 @@
 import javax.swing.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.net.*;
 import java.io.*;
+import java.util.Objects;
 import java.util.Scanner;
 import com.google.gson.Gson;
 
@@ -8,7 +11,7 @@ public class ClientGUI {
     private static Socket socket;
     private static final Gson gson = new Gson();
     private static JFrame mainFrame;
-    private static GameState state;
+    private static GameState gameState;
     private static GameView gameView;
 
     public static void main(String[] args) throws IOException {
@@ -20,6 +23,17 @@ public class ClientGUI {
         mainFrame = new JFrame("Schotten Totten 2 (client)");
         mainFrame.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                Constants.resize(mainFrame.getWidth(), mainFrame.getHeight());
+                if (gameView != null) {
+                    gameView.updateLayout(ClientGUI::onWallClicked);
+                }
+                updateUI();
+            }
+        });
+
         mainFrame.add(new JLabel("Host is choosing role"));
         mainFrame.setVisible(true);
         listenForGameState();
@@ -27,22 +41,20 @@ public class ClientGUI {
 
     private static void listenForGameState() {
         new Thread(() -> {
-            try (
-                    InputStream input = socket.getInputStream();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+            try (InputStream input = socket.getInputStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(input));
             ) {
                 String json;
                 while ((json = reader.readLine()) != null) {
-                    state = gson.fromJson(json, GameState.class);
-                    gameView = new GameView(state, ClientGUI::onWallClicked);
+                    gameState = gson.fromJson(json, GameState.class);
+                    gameView = new GameView(gameState, ClientGUI::onWallClicked);
                     updateUI();
 
-                    if (state.getWinner() != Winner.NONE) {
+                    if (gameState.getWinner() != Winner.NONE) {
                         SwingUtilities.invokeLater(() ->
                                 JOptionPane.showMessageDialog(mainFrame,
-                                        state.getWinner() == Winner.ATTACKER ? "Attacker wins!" : "Defender wins!",
+                                        gameState.getWinner() == Winner.ATTACKER ? "Attacker wins!" : "Defender wins!",
                                         "Game Over", JOptionPane.INFORMATION_MESSAGE));
-                        break;
                     }
                 }
             } catch (IOException e) {
@@ -53,7 +65,7 @@ public class ClientGUI {
 
     public static void updateUI() {
         mainFrame.getContentPane().removeAll();
-        mainFrame.add(gameView);
+        mainFrame.add(Objects.requireNonNullElseGet(gameView, () -> new JLabel("Host is choosing role")));
         mainFrame.revalidate();
         mainFrame.repaint();
     }
@@ -61,7 +73,7 @@ public class ClientGUI {
     public static void onWallClicked(Wall wall) {
         Card card = gameView.getSelectedCard();
         if (card != null) {
-            if (state.isClientTurn()) {
+            if (gameState.isClientTurn()) {
                 ClientMove move = new ClientMove(card, wall.getWallIndex());
                 gameView.unselectCard();
                 try {
@@ -71,8 +83,6 @@ public class ClientGUI {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } else {
-                JOptionPane.showMessageDialog(mainFrame, "It's not your turn", "ur bad", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

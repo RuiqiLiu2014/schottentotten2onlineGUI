@@ -1,10 +1,14 @@
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.*;
 import java.util.Scanner;
 
 public class HostGUI {
-
     private static GameController gameController;
     private static JFrame mainFrame;
 
@@ -16,16 +20,40 @@ public class HostGUI {
         Socket clientSocket = serverSocket.accept();
         System.out.println("Client connected!");
 
-        hostRole = chooseHostRole(true);
+        hostRole = chooseHostRole();
         gameController = new GameController(new Game(new Player(), new Player(), new Board(), new Deck(), new Discard()), hostRole, clientSocket);
 
         mainFrame = new JFrame("Schotten Totten 2 (host)");
         mainFrame.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        gameController.setup();
-        gameController.displayGameState(false);
-        gameController.runGame();
-        mainFrame.setVisible(true);
+        mainFrame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                Constants.resize(mainFrame.getWidth(), mainFrame.getHeight());
+                gameController.updateGameView();
+                displayGameState();
+            }
+        });
+
+        while (true) {
+            gameController.setup();
+            gameController.displayGameState(false);
+            gameController.runGame();
+            mainFrame.setVisible(true);
+
+            while (!gameController.gameOver()) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            if (gameController.switchSides()) {
+                hostRole = hostRole == Role.ATTACKER ? Role.DEFENDER : Role.ATTACKER;
+            }
+            gameController = new GameController(new Game(new Player(), new Player(), new Board(), new Deck(), new Discard()), hostRole, clientSocket);
+        }
     }
 
     public static void displayGameState() {
@@ -35,42 +63,19 @@ public class HostGUI {
         mainFrame.repaint();
     }
 
-    public static void notYourTurn() {
-        JOptionPane.showMessageDialog(mainFrame, "It's not your turn", "ur bad", JOptionPane.ERROR_MESSAGE);
-    }
-
-    public static Role chooseHostRole(boolean isFirstGame) {
-        if (isFirstGame) {
-            while (true) {
-                Scanner scan = new Scanner(System.in);
-                System.out.print("Choose your role (attacker/defender/random): ");
-                String role = scan.nextLine().trim().toLowerCase();
-                if ("attacker".startsWith(role)) {
-                    return Role.ATTACKER;
-                } else if ("defender".startsWith(role)) {
-                    return Role.DEFENDER;
-                } else if ("random".startsWith(role)) {
-                    return Math.random() < 0.5 ? Role.ATTACKER : Role.DEFENDER;
-                } else {
-                    System.out.println("Invalid role.");
-                }
-            }
-        } else {
-            while (true) {
-                Scanner scan = new Scanner(System.in);
-                System.out.print("Choose your role (attacker/defender/random/swap): ");
-                String role = scan.nextLine().trim().toLowerCase();
-                if ("attacker".startsWith(role)) {
-                    return Role.ATTACKER;
-                } else if ("defender".startsWith(role)) {
-                    return Role.DEFENDER;
-                } else if ("random".startsWith(role)) {
-                    return Math.random() < 0.5 ? Role.ATTACKER : Role.DEFENDER;
-                } else if ("swap".startsWith(role)) {
-                    return hostRole == Role.ATTACKER ? Role.DEFENDER : Role.ATTACKER;
-                } else {
-                    System.out.println("Invalid role.");
-                }
+    public static Role chooseHostRole() {
+        while (true) {
+            Scanner scan = new Scanner(System.in);
+            System.out.print("Choose your role (attacker/defender/random): ");
+            String role = scan.nextLine().trim().toLowerCase();
+            if ("attacker".startsWith(role)) {
+                return Role.ATTACKER;
+            } else if ("defender".startsWith(role)) {
+                return Role.DEFENDER;
+            } else if ("random".startsWith(role)) {
+                return Math.random() < 0.5 ? Role.ATTACKER : Role.DEFENDER;
+            } else {
+                System.out.println("Invalid role.");
             }
         }
     }
